@@ -11,7 +11,7 @@ Default underlying: {u}. Orders are never placed by you: use propose_order and t
 
 
 def _llm(messages, u):
-    r = httpx.post(f"{OLLAMA}/api/chat", timeout=120, json={
+    r = httpx.post(f"{OLLAMA}/api/chat", timeout=httpx.Timeout(60.0, connect=1.5), json={
         "model": MODEL, "stream": False, "tools": T.SCHEMAS, "options": {"temperature": 0},
         "messages": [{"role": "system", "content": SYSTEM.format(u=u)}] + messages})
     r.raise_for_status()

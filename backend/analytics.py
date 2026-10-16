@@ -20,11 +20,14 @@ def bs(S, K, T, iv, typ):
     sq = iv * math.sqrt(T)
     d1 = (math.log(S / K) + (R + iv * iv / 2) * T) / sq
     d2 = d1 - sq
+    term1 = -(S * npdf(d1) * iv) / (2 * math.sqrt(T))
     if typ == "CE":
         price, delta = S * ncdf(d1) - K * math.exp(-R * T) * ncdf(d2), ncdf(d1)
+        theta = (term1 - R * K * math.exp(-R * T) * ncdf(d2)) / 365
     else:
         price, delta = K * math.exp(-R * T) * ncdf(-d2) - S * ncdf(-d1), ncdf(d1) - 1
-    return dict(price=price, delta=delta, gamma=npdf(d1) / (S * sq), vega=S * npdf(d1) * math.sqrt(T) / 100)
+        theta = (term1 + R * K * math.exp(-R * T) * ncdf(-d2)) / 365
+    return dict(price=price, delta=delta, gamma=npdf(d1) / (S * sq), vega=S * npdf(d1) * math.sqrt(T) / 100, theta=theta)
 
 
 def last_day_stamps(con):
@@ -60,6 +63,13 @@ def max_pain(snap):
     ks = snap.index.to_numpy(); ce = snap.ce_oi.to_numpy(); pe = snap.pe_oi.to_numpy()
     pain = [(ce * np.clip(k - ks, 0, None)).sum() + (pe * np.clip(ks - k, 0, None)).sum() for k in ks]
     return int(ks[int(np.argmin(pain))])
+
+
+def max_pain_curve(snap):
+    import numpy as np
+    ks = snap.index.to_numpy(); ce = snap.ce_oi.to_numpy(); pe = snap.pe_oi.to_numpy()
+    pain = [(ce * np.clip(k - ks, 0, None)).sum() + (pe * np.clip(ks - k, 0, None)).sum() for k in ks]
+    return [{"strike": int(k), "loss": int(p)} for k, p in zip(ks, pain)]
 
 
 def pcr_series(con, u, ts, hours=6, points=12):
