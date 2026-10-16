@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DhanLens AI</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700&display=swap">
+<style>
+:root{--bg:#e9eef3;--panel:#f8fafc;--ink:#14213d;--mute:#5b6b82;--line:#cfd8e3;--put:#1f8a70;--call:#d1495b;--hl:#3d3bd6;--hlbg:#e6e6fb}
+@media (prefers-color-scheme:dark){:root{--bg:#10151f;--panel:#182030;--ink:#e8eef7;--mute:#93a3bb;--line:#2b3850;--put:#3fc4a0;--call:#f06a7c;--hl:#8e8cff;--hlbg:#262a52}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Schibsted Grotesk",system-ui,sans-serif;font-variant-numeric:tabular-nums;height:100vh;display:grid;grid-template-columns:1fr 400px;gap:14px;padding:14px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;min-height:0}
+header{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+h1{font-size:18px;margin:0 8px 0 0;letter-spacing:-.01em}
+button,select{font:inherit;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:6px;padding:5px 11px;cursor:pointer}
+button:hover{border-color:var(--hl)} button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--hl);outline-offset:2px}
+button.on{background:var(--hl);color:#fff;border-color:var(--hl)}
+.spacer{flex:1}.clock{color:var(--mute);font-size:13px}
+.stats{display:flex;gap:28px;padding:14px 16px}
+.stat b{display:block;font-size:24px;font-weight:700;letter-spacing:-.02em}.stat span{color:var(--mute);font-size:13px}
+#chartwrap{flex:1;padding:0 12px 8px;min-height:0;position:relative}
+svg{width:100%;height:100%}
+.bar{transition:opacity .3s}
+.legend{display:flex;gap:16px;padding:0 16px 12px;color:var(--mute);font-size:13px;align-items:center}
+.dot{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px}
+#log{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.msg{padding:9px 12px;border-radius:8px;max-width:92%;line-height:1.45;font-size:14.5px;white-space:pre-wrap}
+.me{align-self:flex-end;background:var(--hl);color:#fff}
+.bot{align-self:flex-start;background:var(--bg);border:1px solid var(--line)}
+.meta{font-size:12px;color:var(--mute);margin-top:6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 10px}
+.chips button{font-size:12.5px;text-align:left}
+form{display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--line)}
+input{flex:1;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+.confirm{margin-top:8px;background:var(--hlbg);border-color:var(--hl)}
+@media (max-width:900px){body{grid-template-columns:1fr;height:auto}#chartwrap{height:340px}#log{min-height:300px}}
+@media (prefers-reduced-motion:reduce){.bar{transition:none}}
+</style>
+</head>
+<body>
+<section class="panel">
+  <header>
+    <h1>DhanLens AI</h1>
+    <select id="und" aria-label="Underlying"><option>NIFTY</option><option>BANKNIFTY</option></select>
+    <button id="live">Start live replay</button>
+    <button id="reset" hidden>Reset zoom</button>
+    <span class="spacer"></span><span class="clock" id="clock"></span>
+  </header>
+  <div class="stats">
+    <div class="stat"><b id="s-spot">-</b><span>Spot</span></div>
+    <div class="stat"><b id="s-pcr">-</b><span>PCR (OI)</span></div>
+    <div class="stat"><b id="s-mp">-</b><span>Max pain</span></div>
+    <div class="stat"><b id="s-iv">-</b><span>ATM IV</span></div>
+  </div>
+  <div id="chartwrap"><svg id="chart" viewBox="0 0 900 400" preserveAspectRatio="none" role="img" aria-label="Open interest by strike"></svg></div>
+  <div class="legend">
+    <span><i class="dot" style="background:var(--call)"></i>Call OI</span>
+    <span><i class="dot" style="background:var(--put)"></i>Put OI</span>
+    <span><i class="dot" style="background:var(--hl)"></i>Strikes the assistant is pointing at</span>
+    <span class="spacer"></span><span id="rows"></span>
+  </div>
+</section>
+
+<section class="panel">
+  <header><b>Ask about this chain</b><span class="spacer"></span><span class="clock" id="mode"></span></header>
+  <div id="log"></div>
+  <div class="chips" id="chips"></div>
+  <form id="f"><input id="q" autocomplete="off" placeholder="Why is Bank Nifty PCR falling?" aria-label="Question"><button>Ask</button></form>
+</section>
+
+<script>
+const $ = id => document.getElementById(id);
+let stamps = [], idx = null, timer = null, hl = [], chain = null, history = [];
+const fmt = n => n.toLocaleString("en-IN", {maximumFractionDigits: 0});
+const asof = () => idx === null ? null : stamps[idx];
+
+async function load() {
+  const u = $("und").value, a = asof();
+  chain = await (await fetch(`/api/chain?underlying=${u}${a ? "&asof=" + a : ""}`)).json();
+  $("s-spot").textContent = fmt(chain.spot); $("s-pcr").textContent = chain.pcr.toFixed(2);
+  $("s-mp").textContent = chain.max_pain; $("s-iv").textContent = chain.atm_iv.toFixed(1) + "%";
+  $("clock").textContent = new Date(chain.ts).toLocaleString("en-IN", {day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit"});
+  draw();
+}
+
+function draw() {
+  let rows = chain.strikes;
+  if (hl.length) {
+    const step = rows[1].k - rows[0].k, lo = Math.min(...hl) - 3 * step, hi = Math.max(...hl) + 3 * step;
+    rows = rows.filter(r => r.k >= lo && r.k <= hi);
+  }
+  $("reset").hidden = !hl.length;
+  const W = 900, H = 400, pl = 8, pb = 34, pt = 14, n = rows.length, cw = (W - pl * 2) / n;
+  const max = Math.max(...rows.flatMap(r => [r.ce, r.pe])) * 1.08;
+  const y = v => H - pb - (v / max) * (H - pb - pt);
+  let s = "";
+  rows.forEach((r, i) => {
+    const x = pl + i * cw, on = !hl.length || hl.includes(r.k), op = on ? 1 : .3, bw = cw * .38;
+    if (hl.includes(r.k)) s += `<rect x="${x + 1}" y="${pt - 6}" width="${cw - 2}" height="${H - pb - pt + 6}" fill="var(--hlbg)" rx="3"/>`;
+    s += `<rect class="bar" x="${x + cw * .08}" y="${y(r.pe)}" width="${bw}" height="${H - pb - y(r.pe)}" fill="var(--put)" opacity="${op}"><title>${r.k} PE OI ${fmt(r.pe)}</title></rect>`;
+    s += `<rect class="bar" x="${x + cw * .08 + bw + 1}" y="${y(r.ce)}" width="${bw}" height="${H - pb - y(r.ce)}" fill="var(--call)" opacity="${op}"><title>${r.k} CE OI ${fmt(r.ce)}</title></rect>`;
+    if (n <= 15 || i % 3 === 0 || hl.includes(r.k))
+      s += `<text x="${x + cw / 2}" y="${H - 12}" font-size="${n <= 15 ? 15 : 12}" text-anchor="middle" fill="${hl.includes(r.k) ? "var(--hl)" : "var(--mute)"}" font-weight="${hl.includes(r.k) ? 700 : 400}">${r.k}</text>`;
+  });
+  const first = rows[0].k, last = rows[n - 1].k, step = rows[1] ? rows[1].k - rows[0].k : 50;
+  if (chain.spot >= first - step && chain.spot <= last + step) {
+    const sx = pl + ((chain.spot - first) / step + .5) * cw;
+    s += `<line x1="${sx}" x2="${sx}" y1="${pt}" y2="${H - pb}" stroke="var(--ink)" stroke-dasharray="4 4" opacity=".7"/>
+          <text x="${sx + 5}" y="${pt + 11}" font-size="12" fill="var(--ink)">spot ${fmt(chain.spot)}</text>`;
+  }
+  $("chart").innerHTML = s;
+}
+
+function add(role, text, extra) {
+  const d = document.createElement("div"); d.className = "msg " + role; d.textContent = text;
+  if (extra) d.append(extra); $("log").append(d); $("log").scrollTop = 1e9; return d;
+}
+
+async function ask(text) {
+  if (!text.trim()) return;
+  add("me", text); $("q").value = "";
+  const wait = add("bot", "Checking the data...");
+  try {
+    const r = await fetch("/api/chat", {method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({message: text, underlying: $("und").value, asof: asof(), history})});
+    if (!r.ok) throw new Error((await r.json()).detail || r.status);
+    const j = await r.json(); wait.remove();
+    const box = document.createElement("div");
+    const m = document.createElement("div"); m.className = "meta";
+    m.textContent = `Tools: ${j.tools.join(", ") || "none"} | ${j.mode}`; box.append(m);
+    if (j.pending) {
+      const b = document.createElement("button"); b.className = "confirm"; b.textContent = "Confirm paper order";
+      b.onclick = async () => { b.disabled = true; const c = await (await fetch("/api/confirm/" + j.pending, {method: "POST"})).json(); add("bot", c.result); };
+      box.append(b);
+    }
+    add("bot", j.answer, box);
+    history.push({role: "user", content: text}, {role: "assistant", content: j.answer});
+    hl = j.highlights || []; draw();
+    $("mode").textContent = j.mode.startsWith("llm") ? "LLM + tools" : "rule-based";
+  } catch (e) { wait.textContent = "Could not answer: " + e.message; }
+}
+
+$("f").onsubmit = e => { e.preventDefault(); ask($("q").value); };
+$("und").onchange = () => { hl = []; load(); };
+$("reset").onclick = () => { hl = []; draw(); };
+$("live").onclick = () => {
+  if (timer) { clearInterval(timer); timer = null; $("live").textContent = "Start live replay"; $("live").classList.remove("on"); return; }
+  idx = idx === null ? 60 : idx; $("live").textContent = "Pause replay"; $("live").classList.add("on");
+  timer = setInterval(() => { idx = (idx + 1) % stamps.length; load(); }, 1500);
+};
+["Which of my positions has the most risk if Nifty drops 2%?", "Why is Bank Nifty PCR falling?",
+ "Where is max pain on Nifty?", "Is there put skew on Bank Nifty?", "Buy 75 Nifty 24500 CE"].forEach(t => {
+  const b = document.createElement("button"); b.textContent = t; b.onclick = () => ask(t); $("chips").append(b);
+});
+
+(async () => {
+  const m = await (await fetch("/api/meta")).json();
+  stamps = m.stamps; $("rows").textContent = fmt(m.rows) + " option-chain rows in DuckDB";
+  add("bot", "I answer from deterministic tools over the same data you see here. I never place orders without your confirmation.");
+  load();
+})();
+</script>
+</body>
+</html>
