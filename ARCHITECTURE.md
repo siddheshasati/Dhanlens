@@ -27,8 +27,10 @@ flowchart TB
     subgraph AIAgent ["AI Copilot & Orchestration"]
         AgentRouter["Agent Loop & Router<br/>(agent.py)"]
         OllamaLLM["Local Ollama LLM<br/>(qwen2.5:3b / Tool Calling)"]
+        NomicEmbed["Local Ollama Embeddings<br/>(nomic-embed-text 768-dim)"]
+        RAGEngine["RAG & Semantic Router<br/>(rag_engine.py)<br/>• Sub-1ms Cached Vector Index<br/>• Strategy & Defense Playbooks<br/>• Cosine Similarity Intent Routing"]
         RuleRouter["Deterministic Fallback Router<br/>(Zero-Lag Fallback)"]
-        ToolsRegistry["Tools Registry & Schemas<br/>(tools.py)<br/>• get_option_chain<br/>• get_pcr_trend<br/>• get_portfolio_risk<br/>• propose_order"]
+        ToolsRegistry["Tools Registry & Schemas<br/>(tools.py)<br/>• get_option_chain<br/>• get_pcr_trend<br/>• get_portfolio_risk<br/>• get_strategy_playbook<br/>• propose_order"]
     end
 
     subgraph FrontendPresentation ["Clean Light-Mode Single-Page App"]

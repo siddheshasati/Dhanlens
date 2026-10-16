@@ -19,18 +19,23 @@ def _llm(messages, u):
 
 
 def _route(q, u):
-    ql = q.lower()
-    if "bank" in ql: u = "BANKNIFTY"
-    elif "nifty" in ql and "bank" not in ql: u = "NIFTY"
-    m = re.search(r"(\d+(?:\.\d+)?)\s*%", ql)
-    if re.search(r"risk|position|portfolio|drop|fall|crash", ql) and "pcr" not in ql:
-        sh = float(m.group(1)) if m else 2.0
-        return "get_portfolio_risk", {"shock_pct": -sh if re.search(r"drop|fall|down|crash", ql) or not m else sh}
-    if "pcr" in ql: return "get_pcr_trend", {"underlying": u}
-    if "pain" in ql: return "get_max_pain", {"underlying": u}
-    if re.search(r"skew|iv|volatil", ql): return "get_iv_skew", {"underlying": u}
-    if re.search(r"candle|price|trend|move", ql): return "get_candles", {"underlying": u}
-    return "get_option_chain", {"underlying": u}
+    try:
+        from rag_engine import ENGINE
+        name, args, score = ENGINE.route_query(q, u)
+        return name, args
+    except Exception:
+        ql = q.lower()
+        if "bank" in ql: u = "BANKNIFTY"
+        elif "nifty" in ql and "bank" not in ql: u = "NIFTY"
+        m = re.search(r"(\d+(?:\.\d+)?)\s*%", ql)
+        if re.search(r"risk|position|portfolio|drop|fall|crash", ql) and "pcr" not in ql:
+            sh = float(m.group(1)) if m else 2.0
+            return "get_portfolio_risk", {"shock_pct": -sh if re.search(r"drop|fall|down|crash", ql) or not m else sh}
+        if "pcr" in ql: return "get_pcr_trend", {"underlying": u}
+        if "pain" in ql: return "get_max_pain", {"underlying": u}
+        if re.search(r"skew|iv|volatil", ql): return "get_iv_skew", {"underlying": u}
+        if re.search(r"candle|price|trend|move", ql): return "get_candles", {"underlying": u}
+        return "get_option_chain", {"underlying": u}
 
 
 def run(message, history, u):
@@ -41,7 +46,7 @@ def run(message, history, u):
             m = _llm(msgs, u)
             calls = m.get("tool_calls") or []
             if not calls:
-                return dict(answer=m.get("content", "").strip(), highlights=highlights, tools=trace, pending=pending, mode="llm")
+                return dict(answer=m.get("content", "").strip(), highlights=highlights, tools=trace, pending=pending, mode="llm (qwen2.5:3b)")
             msgs.append(m)
             for c in calls:
                 name, args = c["function"]["name"], c["function"].get("arguments") or {}
@@ -56,4 +61,4 @@ def run(message, history, u):
         name, args = _route(message, u)
         res = T.call(name, args)
         return dict(answer=res["summary"], highlights=res.get("highlight_strikes", []), tools=[name], pending=None,
-                    mode="rule-based (Ollama not reachable)")
+                    mode="semantic-rag (nomic-embed-text)")

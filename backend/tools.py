@@ -114,6 +114,18 @@ def confirm(token):
     return f"PAPER fill: {o['side']} {o['qty']} {o['underlying']} {o['strike']}{o['type']} @ {o['price']:.2f}"
 
 
+def get_strategy_playbook(query=""):
+    from rag_engine import ENGINE
+    matches = ENGINE.search_playbook(query, top_k=1)
+    pb = matches[0] if matches else {"title": "Risk Defense", "content": "Maintain delta neutrality and cap wing risk."}
+    return dict(
+        playbook_title=pb["title"],
+        rule=pb["content"],
+        highlight_strikes=[],
+        summary=f"Strategy Playbook [{pb['title']}]: {pb['content']}"
+    )
+
+
 def _s(props, req=()): return {"type": "object", "properties": props, "required": list(req)}
 REG = {
     "get_option_chain": (get_option_chain, "Snapshot: spot, ATM, PCR, max pain, OI walls", _s({"underlying": U})),
@@ -125,6 +137,8 @@ REG = {
                     _s({"underlying": U, "interval_min": {"type": "integer"}, "last_n": {"type": "integer"}})),
     "get_portfolio_risk": (get_portfolio_risk, "Stress-test the user's option positions for a % spot move (negative = fall)",
                            _s({"shock_pct": {"type": "number", "description": "e.g. -2 for a 2% drop"}, "underlying": U})),
+    "get_strategy_playbook": (get_strategy_playbook, "Retrieve institutional derivative adjustment rules and risk defense playbooks (Iron Condors, Strangles, Skew, Gamma squeeze)",
+                              _s({"query": {"type": "string", "description": "Strategy or adjustment query"}})),
     "propose_order": (propose_order, "Propose (never execute) an order; needs user confirmation",
                       _s({"underlying": U, "strike": {"type": "integer"}, "opt_type": {"type": "string", "enum": ["CE", "PE"]},
                           "side": {"type": "string", "enum": ["BUY", "SELL"]}, "qty": {"type": "integer"}}, ["strike", "opt_type", "side"])),

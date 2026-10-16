@@ -22,8 +22,9 @@ DhanLens AI is an institutional-grade derivative intelligence terminal and visua
   - **Market Shock Simulator**: Drag an interactive spot-shock slider from **$-5\%$ (Crash)** to **$+5\%$ (Rally)** to reprice all open positions via Black-Scholes and preview exact rupee P&L impacts.
   - **Risk Guardrails & Audit Blotter**: Active checks on delta neutrality, daily stop-loss ceiling, margin cushion, and paper order history.
 
-### 4. Deterministic Reliability (No Math Hallucinations)
+### 4. Deterministic Reliability & Strategy Playbook RAG
 - The LLM **never calculates numbers or guesses option pricing**. It coordinates through verified quantitative tools (`Black-Scholes`, `DuckDB SQL`, `max_pain`, `pcr_trend`, `oi_change`) over local columnar data.
+- **RAG & Semantic Intent Engine (`nomic-embed-text`)**: Powered by your local Ollama embeddings, the copilot features sub-millisecond semantic tool routing and institutional **Option Strategy & Defense Playbooks** (`get_strategy_playbook`), guiding traders through live adjustments for Iron Condors, Strangles, Skew hedging, and Gamma squeeze protection.
 
 ---
 
