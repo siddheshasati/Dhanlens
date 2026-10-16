@@ -4,3 +4,5 @@ duckdb
 numpy
 pandas
 httpx
+pydantic
+websocket-client
