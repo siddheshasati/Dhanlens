@@ -26,6 +26,13 @@ DhanLens AI is an institutional-grade derivative intelligence terminal and visua
 - The LLM **never calculates numbers or guesses option pricing**. It coordinates through verified quantitative tools (`Black-Scholes`, `DuckDB SQL`, `max_pain`, `pcr_trend`, `oi_change`) over local columnar data.
 - **RAG & Semantic Intent Engine (`nomic-embed-text`)**: Powered by your local Ollama embeddings, the copilot features sub-millisecond semantic tool routing and institutional **Option Strategy & Defense Playbooks** (`get_strategy_playbook`), guiding traders through live adjustments for Iron Condors, Strangles, Skew hedging, and Gamma squeeze protection.
 
+### 5. DhanHQ Live Control Center & Execution Suite
+- Dedicated institutional control center integrating all 13 DhanHQ v2 modules:
+  - **Real-Time Order Routing & Slicing**: Direct execution for intraday and delivery orders with automated quantity slicing for large lots.
+  - **Conditional (GTT/OCO) & Super Bracket Orders**: Multi-leg bracket orders with entry, profit target, and trailing stop loss.
+  - **Risk Safeguards**: Autonomous Kill-Switch freeze, automated P&L exit rules, and emergency portfolio liquidation.
+  - **Live Streaming Sockets**: Instant order execution event streaming via `wss://api-order-update.dhan.co`.
+
 ---
 
 ## 📸 Screenshots & Visual Walkthrough
@@ -65,6 +72,12 @@ Here is a visual walkthrough of DhanLens AI in action (assets located in the [`i
 ### 6. Executive Business Scorecard & Stress Testing
 ![Executive Scorecard Dashboard](images/Scorecard%20Dashboard.png)
 *The dedicated Business Scorecard view showing portfolio health, capital utilization, live market shock slider ($-5\%$ to $+5\%$), active legs, and institutional compliance checks.*
+
+---
+
+### 7. DhanHQ Live Institutional Control Center
+![DhanHQ API Live Control Center](images/Dhanhq%20API%20page.png)
+*The dedicated **⚡ DhanHQ Live Center** view unifying all 13 DhanHQ v2 institutional modules: Live Funds & Collateral Margin KPIs, Order Placement & Slicing, Real-Time Order Book, Conditional Forever/OCO & Super Bracket Orders, Day Positions & Demat Holdings, US/Global Stocks, Past Trades & Accounting Ledger, CDSL eDIS / T-PIN, and the Live WebSocket Order Stream.*
 
 ---
 
@@ -138,6 +151,9 @@ Materialized view for sub-millisecond sentiment charting:
 
 
 ### 5. DhanHQ Live API Integration Suite (13 Institutional Modules)
+
+![DhanHQ API Integration Suite](images/Dhanhq%20API%20page.png)
+
 DhanLens AI is integrated with the complete DhanHQ v2 API ecosystem:
 1. **Orders API**: Real-time order placement, modification, cancellation, full order book, and order slicing (`/orders/slicing`) for freeze limit handling.
 2. **Conditional & Multi-Order API**: Forever / GTT orders supporting both `SINGLE` and `OCO` (One-Cancels-the-Other) trigger pricing.
