@@ -2,6 +2,7 @@
 import uuid
 import numpy as np
 import analytics as A
+from dhan_client import get_client, OrderProposal
 
 CTX = {"con": None, "asof": None, "default_u": "NIFTY"}
 PENDING, BLOTTER = {}, []
@@ -14,6 +15,10 @@ def _env(u):
     ts = A.resolve(CTX["con"], CTX["asof"])
     snap, spot = A.snapshot(CTX["con"], u, ts)
     return u, ts, snap, spot
+
+
+def _dhan():
+    return get_client()
 
 
 def get_option_chain(underlying=None):
@@ -97,21 +102,41 @@ def get_portfolio_risk(shock_pct=-2.0, underlying=None):
                         f"Net delta {sum(r['delta'] for r in rows):+.0f}.")
 
 
-def propose_order(underlying=None, strike=0, opt_type="CE", side="BUY", qty=75):
+def propose_order(underlying=None, strike=0, opt_type="CE", side="BUY", qty=75, is_live=False):
     u, ts, s, spot = _env(underlying)
     ltp = float(s[f"{opt_type.lower()}_ltp"][int(strike)])
     tok = uuid.uuid4().hex[:8]
-    PENDING[tok] = dict(underlying=u, strike=int(strike), type=opt_type, side=side.upper(), qty=int(qty), price=ltp)
+    PENDING[tok] = dict(underlying=u, strike=int(strike), type=opt_type, side=side.upper(), qty=int(qty), price=ltp, is_live=is_live)
+    mode_label = "LIVE DhanHQ order" if is_live else "Paper order"
     return dict(status="PENDING_CONFIRMATION", token=tok, highlight_strikes=[int(strike)], underlying=u,
-                summary=f"Order NOT placed. Proposed: {side.upper()} {qty} {u} {strike}{opt_type} @ ~{ltp:.2f}. "
-                        f"Waiting for explicit user confirmation.")
+                summary=f"{mode_label} NOT placed yet. Proposed: {side.upper()} {qty} {u} {strike}{opt_type} @ ~{ltp:.2f}. "
+                        f"Waiting for explicit user confirmation with token [{tok}].")
 
 
 def confirm(token):
     o = PENDING.pop(token, None)
     if not o: return "Unknown or already-handled order token."
-    BLOTTER.append(o)  # paper fill only
-    return f"PAPER fill: {o['side']} {o['qty']} {o['underlying']} {o['strike']}{o['type']} @ {o['price']:.2f}"
+    c = _dhan()
+    if c.config.is_live and o.get("is_live", False):
+        try:
+            prop = OrderProposal(
+                underlying=o["underlying"],
+                strike=o["strike"],
+                opt_type=o["type"],
+                side=o["side"],
+                qty=o["qty"],
+                price=o["price"],
+                security_id=o.get("security_id", 0),
+                exchange_segment=o.get("exchange_segment", "NSE_FNO"),
+            )
+            resp = c.place_order(prop)
+            BLOTTER.append({**o, "order_id": resp.order_id, "status": resp.status})
+            return f"LIVE DhanHQ Order Executed: Order ID {resp.order_id}, Status: {resp.status}. Details: {o['side']} {o['qty']} {o['underlying']} {o['strike']}{o['type']} @ {o['price']:.2f}"
+        except Exception as e:
+            return f"Live DhanHQ Order Failed: {e}"
+    else:
+        BLOTTER.append(o)
+        return f"PAPER fill: {o['side']} {o['qty']} {o['underlying']} {o['strike']}{o['type']} @ {o['price']:.2f}"
 
 
 def get_strategy_playbook(query=""):
@@ -126,7 +151,75 @@ def get_strategy_playbook(query=""):
     )
 
 
+# ── DhanHQ Live Account & Execution Tools ────────────────────────────
+
+def get_dhan_account_summary():
+    c = _dhan()
+    f = c.funds()
+    pos = c.positions()
+    h = c.holdings()
+    ks = c.get_kill_switch()
+    return dict(
+        client_id=f.dhan_client_id,
+        mode=c.config.mode,
+        is_live=c.config.is_live,
+        available_balance=f.available_balance,
+        collateral=f.collateral_amount,
+        utilized=f.utilized_amount,
+        withdrawable=f.withdrawable_balance,
+        positions_count=len(pos.positions),
+        holdings_count=len(h.holdings),
+        kill_switch=ks.kill_switch_status or "OFF",
+        summary=f"DhanHQ Account {f.dhan_client_id} ({c.config.mode.upper()} mode): Available Cash ₹{f.available_balance:,.2f}, Collateral Margin ₹{f.collateral_amount:,.2f}, Utilized Margin ₹{f.utilized_amount:,.2f}, Withdrawable ₹{f.withdrawable_balance:,.2f}. Open Positions: {len(pos.positions)}, Holdings: {len(h.holdings)}, Kill Switch: {ks.kill_switch_status or 'OFF'}."
+    )
+
+
+def get_dhan_orders():
+    c = _dhan()
+    ords = c.orders()
+    summary_text = f"DhanHQ Order Book: {len(ords)} orders recorded today." if ords else "DhanHQ Order Book: No orders placed today."
+    return dict(
+        orders=[o.model_dump() for o in ords],
+        summary=summary_text
+    )
+
+
+def get_dhan_trades():
+    c = _dhan()
+    trds = c.trades()
+    summary_text = f"DhanHQ Trade Book: {len(trds)} executed trades today." if trds else "DhanHQ Trade Book: No executed trades today."
+    return dict(
+        trades=[t.model_dump() for t in trds],
+        summary=summary_text
+    )
+
+
+def get_dhan_holdings():
+    c = _dhan()
+    h = c.holdings()
+    return dict(
+        holdings=[x.model_dump() for x in h.holdings],
+        total_investment=h.total_investment,
+        total_current_val=h.total_current_val,
+        total_pnl=h.total_pnl,
+        total_pnl_pct=h.total_pnl_pct,
+        summary=f"Dhan Demat Holdings: {len(h.holdings)} stocks. Portfolio Value: ₹{h.total_current_val:,.2f}, Total Investment: ₹{h.total_investment:,.2f}, Total P&L: ₹{h.total_pnl:+,.2f} ({h.total_pnl_pct:+.2f}%)."
+    )
+
+
+def get_dhan_kill_switch():
+    c = _dhan()
+    ks = c.get_kill_switch()
+    st = ks.kill_switch_status or "DEACTIVATED"
+    return dict(
+        status=st,
+        client_id=ks.dhan_client_id,
+        summary=f"DhanHQ Kill Switch status: {st}. Over-trading risk freeze is {'ENABLED' if st == 'ACTIVATE' else 'DISABLED'}."
+    )
+
+
 def _s(props, req=()): return {"type": "object", "properties": props, "required": list(req)}
+
 REG = {
     "get_option_chain": (get_option_chain, "Snapshot: spot, ATM, PCR, max pain, OI walls", _s({"underlying": U})),
     "get_pcr_trend": (get_pcr_trend, "PCR trend over last N hours and which strikes drive the change (use for 'why is PCR falling')",
@@ -139,10 +232,18 @@ REG = {
                            _s({"shock_pct": {"type": "number", "description": "e.g. -2 for a 2% drop"}, "underlying": U})),
     "get_strategy_playbook": (get_strategy_playbook, "Retrieve institutional derivative adjustment rules and risk defense playbooks (Iron Condors, Strangles, Skew, Gamma squeeze)",
                               _s({"query": {"type": "string", "description": "Strategy or adjustment query"}})),
-    "propose_order": (propose_order, "Propose (never execute) an order; needs user confirmation",
+    "get_dhan_account_summary": (get_dhan_account_summary, "Retrieve live DhanHQ funds, margin available, collateral, and account status", _s({})),
+    "get_dhan_orders": (get_dhan_orders, "Retrieve current day order book from DhanHQ", _s({})),
+    "get_dhan_trades": (get_dhan_trades, "Retrieve executed trades today from DhanHQ trade book", _s({})),
+    "get_dhan_holdings": (get_dhan_holdings, "Retrieve demat holdings and long-term equity portfolio from DhanHQ", _s({})),
+    "get_dhan_kill_switch": (get_dhan_kill_switch, "Check the status of DhanHQ emergency Kill Switch", _s({})),
+    "propose_order": (propose_order, "Propose an order (paper or live DhanHQ); always needs explicit user confirmation",
                       _s({"underlying": U, "strike": {"type": "integer"}, "opt_type": {"type": "string", "enum": ["CE", "PE"]},
-                          "side": {"type": "string", "enum": ["BUY", "SELL"]}, "qty": {"type": "integer"}}, ["strike", "opt_type", "side"])),
+                          "side": {"type": "string", "enum": ["BUY", "SELL"]}, "qty": {"type": "integer"},
+                          "is_live": {"type": "boolean", "description": "Set true to place real order on DhanHQ upon confirmation"}},
+                         ["strike", "opt_type", "side"])),
 }
+
 SCHEMAS = [{"type": "function", "function": {"name": n, "description": d, "parameters": p}} for n, (_, d, p) in REG.items()]
 
 
@@ -151,5 +252,5 @@ def call(name, args):
     fn = REG[name][0]
     try:
         return fn(**{k: v for k, v in (args or {}).items() if k in REG[name][2]["properties"]})
-    except Exception as e:  # keep the agent loop alive
+    except Exception as e:
         return {"error": str(e), "highlight_strikes": [], "summary": f"Tool {name} failed: {e}"}

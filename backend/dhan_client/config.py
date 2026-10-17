@@ -29,6 +29,7 @@ INDEX_SECURITY_IDS = {
 # ─── API URLs ─────────────────────────────────────────────────────────
 BASE_URL = "https://api.dhan.co/v2"
 WS_URL = "wss://api-feed.dhan.co"
+WS_ORDER_UPDATE_URL = "wss://api-order-update.dhan.co"
 SCRIP_MASTER_URL = "https://images.dhan.co/api-data/api-scrip-master.csv"
 SCRIP_MASTER_DETAILED_URL = "https://images.dhan.co/api-data/api-scrip-master-detailed.csv"
 
@@ -39,15 +40,48 @@ WS_MAX_INSTRUMENTS_TOTAL = 5000     # Max instruments per WebSocket connection
 WS_MAX_CONNECTIONS = 5              # Max concurrent WebSocket connections
 
 
+def _load_env_file():
+    """Load .env file if environment variables aren't already exported."""
+    candidates = [
+        os.path.join(os.path.dirname(__file__), "..", "..", ".env"),
+        os.path.join(os.getcwd(), ".env"),
+        os.path.join(os.path.dirname(__file__), "..", ".env"),
+    ]
+    is_pytest = "pytest" in sys.modules or "PYTEST_CURRENT_TEST" in os.environ
+    for p in candidates:
+        abs_p = os.path.abspath(p)
+        if os.path.isfile(abs_p):
+            try:
+                with open(abs_p, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and not line.startswith("#") and "=" in line:
+                            k, v = line.split("=", 1)
+                            k = k.strip()
+                            v = v.strip().strip('"').strip("'")
+                            if is_pytest and k == "DHAN_MODE" and "FORCE_DHAN_LIVE" not in os.environ:
+                                continue
+                            if k and k not in os.environ:
+                                os.environ[k] = v
+            except Exception:
+                pass
+            break
+
+
+import sys
+_load_env_file()
+
+
 @dataclass
 class DhanConfig:
     """Runtime configuration, populated from environment variables."""
 
     client_id: str = field(default_factory=lambda: os.getenv("DHAN_CLIENT_ID", ""))
     access_token: str = field(default_factory=lambda: os.getenv("DHAN_ACCESS_TOKEN", ""))
-    mode: str = field(default_factory=lambda: os.getenv("DHAN_MODE", "mock").lower())
+    mode: str = field(default_factory=lambda: "mock" if ("pytest" in sys.modules and "FORCE_DHAN_LIVE" not in os.environ) else os.getenv("DHAN_MODE", "mock").lower())
     base_url: str = BASE_URL
     ws_url: str = WS_URL
+    ws_order_url: str = WS_ORDER_UPDATE_URL
     http_timeout: float = 20.0
     ws_reconnect_max_retries: int = 10
     ws_reconnect_base_delay: float = 1.0    # seconds, doubles each retry

@@ -137,15 +137,48 @@ Materialized view for sub-millisecond sentiment charting:
 
 
 
-### Switching to Live DhanHQ Mode
-To connect to live Dhan market data, copy `.env.example` to `.env` and provide your credentials:
-```ini
-DHAN_MODE=live
-DHAN_CLIENT_ID=your_dhan_client_id
-DHAN_ACCESS_TOKEN=your_dhan_access_token
+### 5. DhanHQ Live API Integration Suite (13 Institutional Modules)
+DhanLens AI is integrated with the complete DhanHQ v2 API ecosystem:
+1. **Orders API**: Real-time order placement, modification, cancellation, full order book, and order slicing (`/orders/slicing`) for freeze limit handling.
+2. **Conditional & Multi-Order API**: Forever / GTT orders supporting both `SINGLE` and `OCO` (One-Cancels-the-Other) trigger pricing.
+3. **Super Order API**: Multi-legged Bracket Orders combining simultaneous Entry leg, Target leg, Stop-Loss leg, and Trailing Stop-Loss.
+4. **Live Order Update**: Real-time streaming WebSocket feed directly connected to `wss://api-order-update.dhan.co` (with RequestCode 42 authentication) for instant execution status changes.
+5. **P&L Exit API**: Automated account-level profit ceiling and loss floor threshold configuration (`/pnlExit`), along with emergency portfolio square-off (`DELETE /positions`).
+6. **Portfolio & Positions API**: Day and carry-forward F&O positions, Demat equity holdings (`/holdings`), and product type conversion (`INTRADAY` ↔ `CNC` / `MARGIN`).
+7. **US & Global Stocks API**: Portfolio holdings, valuation, and order tracking for international US stocks under the GIFT City IFSC framework.
+8. **Funds & Margin API**: Live cash balance, SOD limit, collateral margin, withdrawable funds, and pre-trade Single & Multi-leg margin calculators (`/margincalculator`).
+9. **Past Trades API**: Real-time Trade Book of today's executed fills (`/trades`) with timestamps, prices, and trade history.
+10. **Kill Switch API**: Emergency risk control to instantly freeze account trading (`/killswitch`) upon risk parameter breach.
+11. **Ledger API**: Accounting ledger statement (`/ledger`) with debit/credit voucher tracking and running balance breakdown.
+12. **Postback Webhook**: Dedicated webhook receiver (`POST /api/dhan/postback`) capturing automated order callbacks.
+13. **EDIS API**: Instant CDSL T-PIN generation SMS (`/edis/tpin`), eDIS authorization HTML form generation (`/edis/form`), and ISIN holding authorization inquiry.
+
+---
+
+## 🚀 Running DhanLens AI
+
+### 1. Activate Python Virtual Environment
+On Windows PowerShell:
+```powershell
+.\.venv\Scripts\Activate.ps1
 ```
+*(Or directly invoke the virtual environment's Python executable: `.\.venv\Scripts\python.exe`)*
+
+### 2. Start the Backend Server
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn backend.main:app --reload --port 8000
+```
+Open your browser at **`http://localhost:8000`** to access the DhanLens AI Terminal and the **⚡ DhanHQ Live Center** tab!
+
+### 3. Running Unit & Integration Tests
+```powershell
+.\.venv\Scripts\pytest.exe
+```
+
+---
 
 ## 🏛️ Additional Documentation
 
 - **[BUSINESS.md](BUSINESS.md)**: Business perspective, target personas, ROI, and commercial integration with the Dhan ecosystem.
 - **[ARCHITECTURE.md](ARCHITECTURE.md)**: Technical architecture, Medallion data pipeline, quantitative equations, and sequence diagrams.
+

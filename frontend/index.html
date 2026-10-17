@@ -666,6 +666,118 @@ td.center { text-align: center; }
 .item-box b { color: var(--accent); font-size: 13.5px; display: block; margin-bottom: 4px; }
 .item-box code { font-size: 11px; background: #fff; border: 1px solid var(--border); padding: 2px 6px; border-radius: 3px; }
 .item-box p { font-size: 12.5px; color: var(--text-secondary); margin-top: 6px; }
+
+/* DHANHQ CONTROL CENTER */
+.dhan-view {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.dhan-header-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+.dhan-subtabs {
+  display: flex;
+  gap: 6px;
+  background: var(--bg-card);
+  padding: 6px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  overflow-x: auto;
+}
+.dhan-subtab {
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+.dhan-subtab:hover {
+  color: var(--text-main);
+  background: var(--bg-hover);
+}
+.dhan-subtab.active {
+  background: var(--accent);
+  color: #fff;
+}
+.dhan-section {
+  display: none;
+  animation: fadeIn 0.15s ease-in-out;
+}
+.dhan-section.active {
+  display: block;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.form-group label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+.form-control {
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 600;
+  outline: none;
+}
+.form-control:focus {
+  border-color: var(--accent);
+}
+.badge-status {
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.badge-pending { background: #fef3c7; color: #b45309; }
+.badge-traded { background: #ecfdf5; color: #047857; }
+.badge-cancelled { background: #f1f5f9; color: #64748b; }
+.badge-rejected { background: #fff1f2; color: #be123c; }
+.table-btn {
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: #fff;
+  cursor: pointer;
+}
+.table-btn:hover {
+  background: var(--bg-hover);
+}
+.table-btn-danger {
+  color: #be123c;
+  border-color: #fecdd3;
+  background: #fff1f2;
+}
+.table-btn-danger:hover {
+  background: #ffe4e6;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 </style>
 </head>
 <body>
@@ -685,10 +797,16 @@ td.center { text-align: center; }
     <button class="nav-tab" id="tab-scorecard-btn" onclick="switchTab('scorecard')">
       🏛️ Executive Scorecard
     </button>
+    <button class="nav-tab" id="tab-dhan-btn" onclick="switchTab('dhan')">
+      ⚡ DhanHQ Live Center
+    </button>
   </div>
 
   <!-- CONTROLS -->
   <div class="nav-controls">
+    <div id="dhan-badge" class="pill" style="background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; font-weight:700; display:flex; align-items:center; gap:5px; padding:4px 10px; cursor:pointer;" onclick="switchTab('dhan')">
+      <span class="live-dot" style="background:#10b981;"></span> <span id="dhan-badge-text">DhanHQ LIVE</span>
+    </div>
     <select id="und" class="select-input" aria-label="Index">
       <option value="NIFTY">NIFTY 50</option>
       <option value="BANKNIFTY">BANK NIFTY</option>
@@ -980,6 +1098,601 @@ td.center { text-align: center; }
     </div>
   </div>
 
+  <!-- ==================== VIEW 3: DHANHQ LIVE CONTROL CENTER ==================== -->
+  <div id="view-dhan" class="tab-view">
+    <div class="dhan-view">
+
+      <!-- HERO FUNDS & STATUS CARD -->
+      <div class="card" style="padding:20px; background:linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:18px;">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="width:40px; height:40px; border-radius:8px; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:18px;">
+              D
+            </div>
+            <div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <b style="font-size:17px; font-weight:800;">DhanHQ Institutional API Suite</b>
+                <span id="dhan-hero-mode" class="badge-status badge-traded">LIVE v2</span>
+              </div>
+              <div style="font-size:12px; color:var(--text-muted);">
+                Client ID: <span id="dhan-hero-client" style="font-family:var(--font-mono); font-weight:600; color:var(--text-main);">-</span> |
+                Order Feed: <span id="dhan-hero-feed" style="font-weight:700; color:#059669;">● Streaming</span> |
+                Outbound IP: <span id="dhan-hero-ip" style="font-family:var(--font-mono); font-weight:600; color:var(--text-main);" title="Registered static IP required by SEBI for live order execution">detecting...</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <button class="btn" onclick="loadDhanCenter()">🔄 Refresh</button>
+            <button id="dhan-kill-btn" class="btn table-btn-danger" onclick="toggleKillSwitch()">
+              🛡️ Kill Switch: <span id="dhan-kill-status">STANDBY</span>
+            </button>
+            <button class="btn" style="color:var(--call); border-color:#fecdd3;" onclick="emergencySquareOff()">
+              ⚡ Square-Off All
+            </button>
+          </div>
+        </div>
+
+        <!-- 4 FUNDS KPI TILES -->
+        <div class="dhan-header-grid">
+          <div class="kpi-card">
+            <span class="l">Available Cash</span>
+            <div class="v" style="color:var(--put);" id="dhan-cash">₹0.00</div>
+          </div>
+          <div class="kpi-card">
+            <span class="l">Collateral Margin</span>
+            <div class="v" id="dhan-collateral">₹0.00</div>
+          </div>
+          <div class="kpi-card">
+            <span class="l">Utilized Margin</span>
+            <div class="v" style="color:var(--call);" id="dhan-utilized">₹0.00</div>
+          </div>
+          <div class="kpi-card">
+            <span class="l">Withdrawable Cash</span>
+            <div class="v" style="color:var(--cyan);" id="dhan-withdrawable">₹0.00</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUB NAVIGATION TABS -->
+      <div class="dhan-subtabs">
+        <button class="dhan-subtab active" onclick="setDhanSubTab('orders')">📋 Orders & Slicing</button>
+        <button class="dhan-subtab" onclick="setDhanSubTab('conditional')">⏳ Conditional & Super Orders</button>
+        <button class="dhan-subtab" onclick="setDhanSubTab('positions')">📊 Positions & Holdings</button>
+        <button class="dhan-subtab" onclick="setDhanSubTab('global')">🌐 US / Global Stocks</button>
+        <button class="dhan-subtab" onclick="setDhanSubTab('trades')">📑 Trade Book & Ledger</button>
+        <button class="dhan-subtab" onclick="setDhanSubTab('edis')">🔐 EDIS & T-PIN</button>
+        <button class="dhan-subtab" onclick="setDhanSubTab('stream')">📡 Live Feed & Postback</button>
+        <button class="dhan-subtab" onclick="setDhanSubTab('margin')">🧮 Margin Calculator</button>
+      </div>
+
+      <!-- SUB-PANEL 1: ORDERS & SLICING -->
+      <div id="dhan-sec-orders" class="dhan-section active">
+        <div style="display:grid; grid-template-columns:1fr 2fr; gap:16px;">
+          <!-- ORDER PLACEMENT CARD -->
+          <div class="card" style="padding:16px;">
+            <div style="font-weight:700; font-size:14px; margin-bottom:12px;">Place DhanHQ Order</div>
+            <form id="dhan-order-form" onsubmit="handlePlaceOrder(event)" style="display:flex; flex-direction:column; gap:10px;">
+              <div class="form-group">
+                <label>Security ID (Scrip)</label>
+                <input id="ord-sec" class="form-control" type="text" placeholder="e.g. 1333 (HDFC) or 2885 (RIL)" required value="1333">
+              </div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                <div class="form-group">
+                  <label>Segment</label>
+                  <select id="ord-seg" class="form-control">
+                    <option value="NSE_EQ">NSE Equity</option>
+                    <option value="NSE_FNO">NSE F&O</option>
+                    <option value="BSE_EQ">BSE Equity</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Side</label>
+                  <select id="ord-side" class="form-control">
+                    <option value="BUY">BUY</option>
+                    <option value="SELL">SELL</option>
+                  </select>
+                </div>
+              </div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                <div class="form-group">
+                  <label>Product</label>
+                  <select id="ord-prod" class="form-control">
+                    <option value="CNC">CNC (Delivery)</option>
+                    <option value="INTRADAY">INTRADAY</option>
+                    <option value="MARGIN">MARGIN</option>
+                    <option value="BO">BO (Bracket)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Order Type</label>
+                  <select id="ord-type" class="form-control">
+                    <option value="LIMIT">LIMIT</option>
+                    <option value="MARKET">MARKET</option>
+                    <option value="STOP_LOSS">STOP LOSS</option>
+                  </select>
+                </div>
+              </div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                <div class="form-group">
+                  <label>Quantity</label>
+                  <input id="ord-qty" class="form-control" type="number" min="1" value="10" required>
+                </div>
+                <div class="form-group">
+                  <label>Price (₹)</label>
+                  <input id="ord-price" class="form-control" type="number" step="0.05" value="1650.00" required>
+                </div>
+              </div>
+              <div style="display:flex; gap:8px; margin-top:8px;">
+                <button type="submit" class="btn btn-primary" style="flex:1;">Submit Order</button>
+                <button type="button" class="btn" onclick="handleSliceOrder()" title="Slice large order over freeze limits">Slice</button>
+              </div>
+              <div id="ord-msg" style="font-size:12px; margin-top:4px;"></div>
+            </form>
+          </div>
+
+          <!-- ORDER BOOK -->
+          <div class="card" style="padding:16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <b style="font-size:14px;">Today's Order Book (<span id="dhan-order-count">0</span>)</b>
+              <button class="btn" style="font-size:11.5px; padding:3px 8px;" onclick="loadOrders()">Refresh Orders</button>
+            </div>
+            <div style="max-height:360px; overflow-y:auto;">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="text-align:left;">Order ID</th>
+                    <th>Scrip</th>
+                    <th>Side</th>
+                    <th>Product</th>
+                    <th>Qty / Fill</th>
+                    <th>Price</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="dhan-orders-body">
+                  <tr><td colspan="8" style="text-align:center; color:var(--text-muted); padding:20px;">No orders found today</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUB-PANEL 2: CONDITIONAL & SUPER ORDERS -->
+      <div id="dhan-sec-conditional" class="dhan-section">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <!-- FOREVER / GTT ORDER -->
+          <div class="card" style="padding:16px;">
+            <div style="font-weight:700; font-size:14px; margin-bottom:8px;">Forever / GTT Order (SINGLE & OCO)</div>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Trigger orders active until executed or cancelled.</p>
+            <form onsubmit="handlePlaceForever(event)" style="display:flex; flex-direction:column; gap:10px;">
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                <div class="form-group">
+                  <label>Order Flag</label>
+                  <select id="fov-flag" class="form-control" onchange="toggleOcoFields(this.value)">
+                    <option value="SINGLE">SINGLE</option>
+                    <option value="OCO">OCO (One-Cancels-Other)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Security ID</label>
+                  <input id="fov-sec" class="form-control" value="1333" required>
+                </div>
+              </div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                <div class="form-group">
+                  <label>Side</label>
+                  <select id="fov-side" class="form-control">
+                    <option value="BUY">BUY</option>
+                    <option value="SELL">SELL</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Quantity</label>
+                  <input id="fov-qty" class="form-control" type="number" value="10" required>
+                </div>
+              </div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                <div class="form-group">
+                  <label>Trigger Price (₹)</label>
+                  <input id="fov-trigger" class="form-control" type="number" step="0.05" value="1600.00" required>
+                </div>
+                <div class="form-group">
+                  <label>Limit Price (₹)</label>
+                  <input id="fov-price" class="form-control" type="number" step="0.05" value="1602.00" required>
+                </div>
+              </div>
+              <div id="oco-group" style="display:none; padding:10px; background:var(--bg-page); border-radius:var(--radius-sm); border:1px dashed var(--border);">
+                <div style="font-size:11px; font-weight:700; color:var(--call); margin-bottom:6px;">OCO Target Leg 2</div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                  <div class="form-group">
+                    <label>Leg 2 Trigger (₹)</label>
+                    <input id="fov-trigger1" class="form-control" type="number" step="0.05" value="1750.00">
+                  </div>
+                  <div class="form-group">
+                    <label>Leg 2 Price (₹)</label>
+                    <input id="fov-price1" class="form-control" type="number" step="0.05" value="1750.00">
+                  </div>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary" style="margin-top:6px;">Place Forever / GTT</button>
+            </form>
+
+            <div style="margin-top:16px;">
+              <b style="font-size:13px;">Active Forever Orders (<span id="fov-count">0</span>)</b>
+              <div id="fov-list" style="margin-top:8px; font-size:12px; color:var(--text-muted);">None active</div>
+            </div>
+          </div>
+
+          <!-- SUPER ORDER (BRACKET) -->
+          <div class="card" style="padding:16px;">
+            <div style="font-weight:700; font-size:14px; margin-bottom:8px;">Super Order (Bracket with SL & Target)</div>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Combines entry, target, and stop-loss with optional trailing SL in one shot.</p>
+            <form onsubmit="handlePlaceSuper(event)" style="display:flex; flex-direction:column; gap:10px;">
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                <div class="form-group">
+                  <label>Security ID</label>
+                  <input id="sup-sec" class="form-control" value="1333" required>
+                </div>
+                <div class="form-group">
+                  <label>Quantity</label>
+                  <input id="sup-qty" class="form-control" type="number" value="10" required>
+                </div>
+              </div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                <div class="form-group">
+                  <label>Entry Price (₹)</label>
+                  <input id="sup-price" class="form-control" type="number" step="0.05" value="1650.00" required>
+                </div>
+                <div class="form-group">
+                  <label>Target Price (₹)</label>
+                  <input id="sup-target" class="form-control" type="number" step="0.05" value="1700.00" required>
+                </div>
+              </div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                <div class="form-group">
+                  <label>Stop Loss (₹)</label>
+                  <input id="sup-sl" class="form-control" type="number" step="0.05" value="1625.00" required>
+                </div>
+                <div class="form-group">
+                  <label>Trailing SL (₹)</label>
+                  <input id="sup-tsl" class="form-control" type="number" step="0.05" value="5.00">
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary" style="margin-top:6px;">Place Super Order</button>
+            </form>
+
+            <div style="margin-top:16px;">
+              <b style="font-size:13px;">Active Super Orders (<span id="sup-count">0</span>)</b>
+              <div id="sup-list" style="margin-top:8px; font-size:12px; color:var(--text-muted);">None active</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUB-PANEL 3: POSITIONS & HOLDINGS -->
+      <div id="dhan-sec-positions" class="dhan-section">
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <!-- POSITIONS CARD -->
+          <div class="card" style="padding:16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <b style="font-size:14px;">Day & F&O Positions (<span id="dhan-pos-count">0</span>)</b>
+              <button class="btn" style="font-size:11.5px; padding:3px 8px;" onclick="loadDhanPositions()">Refresh</button>
+            </div>
+            <div style="max-height:260px; overflow-y:auto;">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="text-align:left;">Instrument</th>
+                    <th>Segment</th>
+                    <th>Net Qty</th>
+                    <th>Avg Price</th>
+                    <th>LTP</th>
+                    <th>P&L</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="dhan-pos-body">
+                  <tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:20px;">No open positions found</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- DEMAT HOLDINGS CARD -->
+          <div class="card" style="padding:16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <div>
+                <b style="font-size:14px;">Equity Demat Holdings (<span id="dhan-hold-count">0</span>)</b>
+                <span id="dhan-hold-meta" style="font-size:12px; color:var(--text-muted); margin-left:8px;"></span>
+              </div>
+              <button class="btn" style="font-size:11.5px; padding:3px 8px;" onclick="loadHoldings()">Refresh Holdings</button>
+            </div>
+            <div style="max-height:260px; overflow-y:auto;">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="text-align:left;">Symbol / ISIN</th>
+                    <th>Total Qty</th>
+                    <th>Available</th>
+                    <th>Avg Cost</th>
+                    <th>LTP</th>
+                    <th>Current Value</th>
+                    <th>P&L (%)</th>
+                  </tr>
+                </thead>
+                <tbody id="dhan-hold-body">
+                  <tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:20px;">No demat holdings available</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUB-PANEL 4: US / GLOBAL STOCKS -->
+      <div id="dhan-sec-global" class="dhan-section">
+        <div class="card" style="padding:20px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <div>
+              <b style="font-size:16px;">US & Global Stocks Portfolio (GIFT City IFSC)</b>
+              <div id="global-status-line" style="font-size:12px; color:var(--text-muted); margin-top:2px;">Checking global portfolio status...</div>
+            </div>
+            <button class="btn" onclick="loadGlobalStocks()">Refresh US Portfolio</button>
+          </div>
+          <div class="dhan-header-grid" style="margin-bottom:16px;">
+            <div class="kpi-card">
+              <span class="l">US Total Value</span>
+              <div class="v" id="global-total-val">$0.00</div>
+            </div>
+            <div class="kpi-card">
+              <span class="l">Unrealized P&L</span>
+              <div class="v" id="global-total-pnl">$0.00</div>
+            </div>
+            <div class="kpi-card">
+              <span class="l">Global Account Status</span>
+              <div class="v" style="font-size:16px;" id="global-acc-status">-</div>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th style="text-align:left;">Ticker & Company</th>
+                <th>Quantity</th>
+                <th>Avg Price ($)</th>
+                <th>LTP ($)</th>
+                <th>Total Value ($)</th>
+                <th>P&L ($)</th>
+              </tr>
+            </thead>
+            <tbody id="global-stocks-body">
+              <tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:20px;">No international holdings found</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SUB-PANEL 5: TRADE BOOK & LEDGER -->
+      <div id="dhan-sec-trades" class="dhan-section">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <!-- TRADE BOOK -->
+          <div class="card" style="padding:16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <b style="font-size:14px;">Today's Executed Trades (<span id="dhan-trd-count">0</span>)</b>
+              <button class="btn" style="font-size:11.5px; padding:3px 8px;" onclick="loadTrades()">Refresh</button>
+            </div>
+            <div style="max-height:360px; overflow-y:auto;">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="text-align:left;">Trade ID</th>
+                    <th>Time</th>
+                    <th>Symbol</th>
+                    <th>Side</th>
+                    <th>Qty</th>
+                    <th>Executed Price</th>
+                  </tr>
+                </thead>
+                <tbody id="dhan-trades-body">
+                  <tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:20px;">No executed trades today</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- LEDGER STATEMENT -->
+          <div class="card" style="padding:16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <b style="font-size:14px;">Accounting Ledger Statement</b>
+              <div style="display:flex; gap:6px;">
+                <input id="led-from" class="form-control" type="date" value="2026-01-01" style="font-size:11px; padding:3px 6px;">
+                <input id="led-to" class="form-control" type="date" value="2026-10-17" style="font-size:11px; padding:3px 6px;">
+                <button class="btn" style="font-size:11.5px; padding:3px 8px;" onclick="loadLedger()">Load</button>
+              </div>
+            </div>
+            <div style="display:flex; gap:12px; margin-bottom:10px; font-size:12px; font-weight:600;">
+              <div>Debits: <span style="color:var(--call);" id="led-deb">₹0.00</span></div>
+              <div>Credits: <span style="color:var(--put);" id="led-cred">₹0.00</span></div>
+              <div>Balance: <span style="color:var(--accent);" id="led-bal">₹0.00</span></div>
+            </div>
+            <div style="max-height:300px; overflow-y:auto;">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="text-align:left;">Date</th>
+                    <th style="text-align:left;">Narration</th>
+                    <th>Amount</th>
+                    <th>DR/CR</th>
+                    <th>Balance</th>
+                  </tr>
+                </thead>
+                <tbody id="dhan-ledger-body">
+                  <tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:20px;">Click Load to view statement</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUB-PANEL 6: EDIS & CDSL -->
+      <div id="dhan-sec-edis" class="dhan-section">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div class="card" style="padding:20px;">
+            <b style="font-size:15px; display:block; margin-bottom:6px;">CDSL T-PIN Generation</b>
+            <p style="font-size:12.5px; color:var(--text-secondary); margin-bottom:16px;">
+              Generate a new 6-digit T-PIN sent directly to your CDSL registered mobile number and email. Required for authorizing delivery stock sales.
+            </p>
+            <button class="btn btn-primary" onclick="triggerTpin()">📲 Generate CDSL T-PIN</button>
+            <div id="edis-tpin-feedback" style="margin-top:12px; font-size:12.5px;"></div>
+          </div>
+
+          <div class="card" style="padding:20px;">
+            <b style="font-size:15px; display:block; margin-bottom:6px;">Generate eDIS Authorization Form</b>
+            <p style="font-size:12.5px; color:var(--text-secondary); margin-bottom:14px;">
+              Obtain CDSL HTML verification form payload for pre-authorizing demat stocks before placing sell orders.
+            </p>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div class="form-group">
+                <label>Stock ISIN</label>
+                <input id="edis-isin" class="form-control" placeholder="e.g. INE040A01034" value="INE040A01034">
+              </div>
+              <div class="form-group">
+                <label>Quantity to Authorize</label>
+                <input id="edis-qty" class="form-control" type="number" value="10">
+              </div>
+              <button class="btn" style="margin-top:6px;" onclick="generateEdisForm()">Generate CDSL Form</button>
+              <button class="btn" onclick="checkEdisStatus()">Check ISIN Status</button>
+            </div>
+            <div id="edis-form-result" style="margin-top:12px; font-size:12px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUB-PANEL 7: LIVE FEED & POSTBACK -->
+      <div id="dhan-sec-stream" class="dhan-section">
+        <div style="display:grid; grid-template-columns:1fr 2fr; gap:16px;">
+          <!-- POSTBACK CONFIG -->
+          <div class="card" style="padding:16px;">
+            <b style="font-size:14px; display:block; margin-bottom:6px;">Postback Webhook Configuration</b>
+            <p style="font-size:12px; color:var(--text-secondary); margin-bottom:12px;">
+              DhanHQ pushes automated JSON callbacks for order fills, rejections, and state modifications.
+            </p>
+            <div class="form-group" style="margin-bottom:12px;">
+              <label>Your Webhook Endpoint</label>
+              <input id="webhook-url-input" class="form-control" readonly value="/api/dhan/postback" style="font-family:var(--font-mono); font-size:12px; background:var(--bg-page);">
+            </div>
+            <div style="padding:10px; background:var(--bg-page); border-radius:var(--radius-sm); font-size:11.5px; color:var(--text-secondary); line-height:1.6;">
+              <b>Setup Instructions:</b><br>
+              1. Log in to <a href="https://web.dhan.co" target="_blank">web.dhan.co</a>.<br>
+              2. Navigate to DhanHQ API / Access Token generation.<br>
+              3. Enter this server's public URL + <code>/api/dhan/postback</code> into the Postback URL field.
+            </div>
+            <div style="margin-top:12px;">
+              <button class="btn" style="width:100%;" onclick="loadPostbacks()">Refresh Postback Audit Log</button>
+            </div>
+          </div>
+
+          <!-- REAL-TIME EVENT STREAM -->
+          <div class="card" style="padding:16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <div>
+                <b style="font-size:14px;">Live Order WebSocket Stream (<code>wss://api-order-update.dhan.co</code>)</b>
+                <div style="font-size:11.5px; color:#059669; font-weight:600;">● Active Listener — Code 42 Auth</div>
+              </div>
+              <button class="btn" style="font-size:11.5px; padding:3px 8px;" onclick="loadLiveOrders()">Poll Updates</button>
+            </div>
+            <div id="live-order-stream" style="max-height:360px; overflow-y:auto; display:flex; flex-direction:column; gap:8px;">
+              <div style="text-align:center; color:var(--text-muted); padding:30px; font-size:12.5px;">
+                Listening for real-time order lifecycle events...
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUB-PANEL 8: MARGIN CALCULATOR -->
+      <div id="dhan-sec-margin" class="dhan-section">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div class="card" style="padding:16px;">
+            <b style="font-size:14px; display:block; margin-bottom:12px;">DhanHQ Margin Calculator</b>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                <div class="form-group">
+                  <label>Segment</label>
+                  <select id="mc-seg" class="form-control">
+                    <option value="NSE_EQ">NSE Equity</option>
+                    <option value="NSE_FNO">NSE F&O</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Side</label>
+                  <select id="mc-side" class="form-control">
+                    <option value="BUY">BUY</option>
+                    <option value="SELL">SELL</option>
+                  </select>
+                </div>
+              </div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                <div class="form-group">
+                  <label>Product</label>
+                  <select id="mc-prod" class="form-control">
+                    <option value="CNC">CNC (Delivery)</option>
+                    <option value="INTRADAY">INTRADAY</option>
+                    <option value="MARGIN">MARGIN</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Security ID</label>
+                  <input id="mc-sec" class="form-control" value="1333">
+                </div>
+              </div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                <div class="form-group">
+                  <label>Quantity</label>
+                  <input id="mc-qty" class="form-control" type="number" value="10">
+                </div>
+                <div class="form-group">
+                  <label>Price (₹)</label>
+                  <input id="mc-price" class="form-control" type="number" step="0.05" value="1650.00">
+                </div>
+              </div>
+              <button class="btn btn-primary" onclick="calculateMargin()">Compute Required Margin</button>
+            </div>
+          </div>
+
+          <div class="card" style="padding:16px;">
+            <b style="font-size:14px; display:block; margin-bottom:14px;">Margin Breakdown</b>
+            <div class="dhan-header-grid" style="margin-bottom:16px;">
+              <div class="kpi-card">
+                <span class="l">Total Margin Needed</span>
+                <div class="v" style="color:var(--accent);" id="mc-res-tot">₹0.00</div>
+              </div>
+              <div class="kpi-card">
+                <span class="l">SPAN Margin</span>
+                <div class="v" id="mc-res-span">₹0.00</div>
+              </div>
+              <div class="kpi-card">
+                <span class="l">Exposure Margin</span>
+                <div class="v" id="mc-res-exp">₹0.00</div>
+              </div>
+              <div class="kpi-card">
+                <span class="l">Available Balance</span>
+                <div class="v" id="mc-res-avail">₹0.00</div>
+              </div>
+            </div>
+            <div id="mc-res-status" style="font-size:12.5px; color:var(--text-secondary);">
+              Enter trade details to estimate required capital & broker leverage.
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
 </main>
 
 <!-- GLOSSARY MODAL -->
@@ -1039,12 +1752,654 @@ function switchTab(t) {
   if (t === "terminal") {
     $("view-terminal").classList.add("active");
     $("tab-terminal-btn").classList.add("active");
-  } else {
+  } else if (t === "scorecard") {
     $("view-scorecard").classList.add("active");
     $("tab-scorecard-btn").classList.add("active");
     loadScorecard();
+  } else if (t === "dhan") {
+    $("view-dhan").classList.add("active");
+    $("tab-dhan-btn").classList.add("active");
+    loadDhanCenter();
   }
 }
+
+// DHANHQ LIVE CONTROL CENTER CONTROLLER
+let dhanConfig = null;
+let currentKillStatus = "STANDBY";
+let dhanSubTab = "orders";
+let dhanOrderPollTimer = null;
+
+function setDhanSubTab(sub) {
+  dhanSubTab = sub;
+  document.querySelectorAll(".dhan-subtab").forEach(b => b.classList.remove("active"));
+  event.target.classList.add("active");
+  document.querySelectorAll(".dhan-section").forEach(s => s.classList.remove("active"));
+  const target = $(`dhan-sec-${sub}`);
+  if (target) target.classList.add("active");
+
+  if (sub === "orders") loadOrders();
+  else if (sub === "conditional") { loadForeverOrders(); loadSuperOrders(); }
+  else if (sub === "positions") { loadDhanPositions(); loadHoldings(); }
+  else if (sub === "global") loadGlobalStocks();
+  else if (sub === "trades") { loadTrades(); loadLedger(); }
+  else if (sub === "stream") { loadLiveOrders(); loadPostbacks(); }
+}
+
+async function loadDhanCenter() {
+  try {
+    const [cfg, funds, kill, ipInfo] = await Promise.all([
+      fetch("/api/dhan/config").then(r => r.json()).catch(() => ({})),
+      fetch("/api/dhan/funds").then(r => r.json()).catch(() => ({})),
+      fetch("/api/dhan/killswitch").then(r => r.json()).catch(() => ({})),
+      fetch("/api/dhan/ip").then(r => r.json()).catch(() => ({})),
+    ]);
+    dhanConfig = cfg;
+    $("dhan-hero-client").textContent = cfg.client_id || "-";
+    $("dhan-hero-mode").textContent = (cfg.mode || "LIVE").toUpperCase() + " v2";
+    $("dhan-hero-feed").textContent = cfg.ws_order_running ? "● Streaming Active" : "○ Disconnected";
+    $("dhan-hero-feed").style.color = cfg.ws_order_running ? "#059669" : "#dc2626";
+    if ($("dhan-hero-ip") && ipInfo && ipInfo.current_public_ip) {
+      $("dhan-hero-ip").textContent = ipInfo.current_public_ip;
+    }
+
+    const badgeText = $("dhan-badge-text");
+    if (badgeText) badgeText.textContent = `DhanHQ ${cfg.mode.toUpperCase()}`;
+
+    // Funds
+    $("dhan-cash").textContent = "₹" + fmt(funds.available_balance, 2);
+    $("dhan-collateral").textContent = "₹" + fmt(funds.collateral_amount, 2);
+    $("dhan-utilized").textContent = "₹" + fmt(funds.utilized_amount, 2);
+    $("dhan-withdrawable").textContent = "₹" + fmt(funds.withdrawable_balance, 2);
+
+    // Kill switch
+    currentKillStatus = kill.kill_switch_status || "STANDBY";
+    updateKillSwitchUI(currentKillStatus);
+
+    // Load active tab data
+    if (dhanSubTab === "orders") loadOrders();
+    else if (dhanSubTab === "conditional") { loadForeverOrders(); loadSuperOrders(); }
+    else if (dhanSubTab === "positions") { loadDhanPositions(); loadHoldings(); }
+    else if (dhanSubTab === "global") loadGlobalStocks();
+    else if (dhanSubTab === "trades") { loadTrades(); loadLedger(); }
+    else if (dhanSubTab === "stream") { loadLiveOrders(); loadPostbacks(); }
+
+    // Start background order event polling if not already started
+    if (!dhanOrderPollTimer) {
+      dhanOrderPollTimer = setInterval(loadLiveOrders, 4000);
+    }
+  } catch (err) {
+    console.error("Error loading DhanHQ center:", err);
+  }
+}
+
+function updateKillSwitchUI(status) {
+  const btn = $("dhan-kill-btn");
+  const span = $("dhan-kill-status");
+  if (!btn || !span) return;
+  if (status === "ACTIVATE") {
+    span.textContent = "ARMED (FROZEN)";
+    btn.style.background = "#be123c";
+    btn.style.color = "#fff";
+  } else {
+    span.textContent = "STANDBY";
+    btn.style.background = "#fff1f2";
+    btn.style.color = "#be123c";
+  }
+}
+
+async function toggleKillSwitch() {
+  const nextStatus = currentKillStatus === "ACTIVATE" ? "DEACTIVATE" : "ACTIVATE";
+  if (nextStatus === "ACTIVATE") {
+    if (!confirm("⚠️ CAUTION: Activating Kill Switch will freeze trading for the rest of today! Open positions will be protected. Proceed?")) return;
+  }
+  try {
+    const res = await fetch("/api/dhan/killswitch", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({status: nextStatus})
+    });
+    const d = await res.json();
+    currentKillStatus = d.kill_switch_status || nextStatus;
+    updateKillSwitchUI(currentKillStatus);
+    alert(`Kill switch updated: ${d.message || currentKillStatus}`);
+  } catch (e) {
+    alert("Kill switch update failed: " + e.message);
+  }
+}
+
+async function emergencySquareOff() {
+  if (!confirm("🚨 EMERGENCY: Are you sure you want to square off all open positions right now?")) return;
+  try {
+    const res = await fetch("/api/dhan/positions", {method: "DELETE"});
+    const d = await res.json();
+    alert("Square-off triggered: " + JSON.stringify(d));
+    loadDhanPositions();
+    loadOrders();
+  } catch (e) {
+    alert("Square-off failed: " + e.message);
+  }
+}
+
+// ── Orders API UI ──
+async function loadOrders() {
+  try {
+    const res = await fetch("/api/dhan/orders");
+    const d = await res.json();
+    const list = d.orders || [];
+    $("dhan-order-count").textContent = list.length;
+    const tb = $("dhan-orders-body");
+    if (!list.length) {
+      tb.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted); padding:20px;">No orders found in order book today</td></tr>`;
+      return;
+    }
+    tb.innerHTML = list.map(o => `
+      <tr>
+        <td style="text-align:left; font-family:var(--font-mono); font-size:11px;">${o.order_id}</td>
+        <td><b>${o.trading_symbol || o.security_id}</b></td>
+        <td><span class="pill ${o.transaction_type === 'BUY' ? 'pill-put' : 'pill-call'}">${o.transaction_type}</span></td>
+        <td>${o.product_type}</td>
+        <td>${o.filled_qty} / ${o.quantity}</td>
+        <td>₹${fmt(o.price, 2)}</td>
+        <td><span class="badge-status badge-${(o.order_status || 'pending').toLowerCase()}">${o.order_status}</span></td>
+        <td>
+          ${['PENDING', 'TRANSIT'].includes(o.order_status) ?
+            `<button class="table-btn table-btn-danger" onclick="cancelOrder('${o.order_id}')">Cancel</button>` :
+            `<span style="color:var(--text-muted); font-size:11px;">Completed</span>`}
+        </td>
+      </tr>
+    `).join("");
+  } catch (e) {
+    console.error("loadOrders failed:", e);
+  }
+}
+
+async function handlePlaceOrder(e) {
+  e.preventDefault();
+  const msgEl = $("ord-msg");
+  msgEl.textContent = "Submitting to DhanHQ...";
+  msgEl.style.color = "var(--accent)";
+
+  const payload = {
+    security_id: $("ord-sec").value.trim(),
+    exchange_segment: $("ord-seg").value,
+    transaction_type: $("ord-side").value,
+    product_type: $("ord-prod").value,
+    order_type: $("ord-type").value,
+    quantity: parseInt($("ord-qty").value),
+    price: parseFloat($("ord-price").value)
+  };
+
+  try {
+    const res = await fetch("/api/dhan/orders", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(payload)
+    });
+    const d = await res.json();
+    if (res.ok) {
+      msgEl.textContent = `✓ Order Placed! ID: ${d.order_id} [${d.status}]`;
+      msgEl.style.color = "var(--put)";
+      loadOrders();
+      loadLiveOrders();
+    } else {
+      const errText = d.detail || 'Failed';
+      msgEl.innerHTML = `<span style="color:var(--call); font-weight:600;">✕ ${errText}</span>`;
+    }
+  } catch (err) {
+    msgEl.innerHTML = `<span style="color:var(--call); font-weight:600;">✕ ${err.message}</span>`;
+  }
+}
+
+async function handleSliceOrder() {
+  const qty = parseInt($("ord-qty").value);
+  if (qty < 2) {
+    alert("Slicing is for large orders (e.g. quantity > exchange freeze limit). Increase quantity first.");
+    return;
+  }
+  const payload = {
+    security_id: $("ord-sec").value.trim(),
+    exchange_segment: $("ord-seg").value,
+    transaction_type: $("ord-side").value,
+    product_type: $("ord-prod").value,
+    order_type: $("ord-type").value,
+    quantity: qty,
+    price: parseFloat($("ord-price").value)
+  };
+  try {
+    const res = await fetch("/api/dhan/orders/slice", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(payload)
+    });
+    const d = await res.json();
+    alert(`Sliced into ${d.sliced_orders ? d.sliced_orders.length : 0} orders successfully!`);
+    loadOrders();
+  } catch (err) {
+    alert("Order slicing error: " + err.message);
+  }
+}
+
+async function cancelOrder(orderId) {
+  if (!confirm(`Cancel order ${orderId}?`)) return;
+  try {
+    await fetch(`/api/dhan/orders/${orderId}`, {method: "DELETE"});
+    loadOrders();
+  } catch (err) {
+    alert("Cancel failed: " + err.message);
+  }
+}
+
+// ── Conditional & Super Orders UI ──
+function toggleOcoFields(flag) {
+  const oco = $("oco-group");
+  if (oco) oco.style.display = flag === "OCO" ? "block" : "none";
+}
+
+async function handlePlaceForever(e) {
+  e.preventDefault();
+  const flag = $("fov-flag").value;
+  const payload = {
+    order_flag: flag,
+    security_id: $("fov-sec").value.trim(),
+    transaction_type: $("fov-side").value,
+    exchange_segment: "NSE_EQ",
+    product_type: "CNC",
+    quantity: parseInt($("fov-qty").value),
+    price: parseFloat($("fov-price").value),
+    trigger_price: parseFloat($("fov-trigger").value),
+    price1: flag === "OCO" ? parseFloat($("fov-price1").value) : 0.0,
+    trigger_price1: flag === "OCO" ? parseFloat($("fov-trigger1").value) : 0.0,
+    quantity1: flag === "OCO" ? parseInt($("fov-qty").value) : 0
+  };
+  try {
+    const res = await fetch("/api/dhan/forever/orders", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(payload)
+    });
+    const d = await res.json();
+    alert(`Forever order response: ${d.message || d.status}`);
+    loadForeverOrders();
+  } catch (err) {
+    alert("Forever order failed: " + err.message);
+  }
+}
+
+async function loadForeverOrders() {
+  try {
+    const res = await fetch("/api/dhan/forever/orders");
+    const d = await res.json();
+    const list = d.forever_orders || [];
+    $("fov-count").textContent = list.length;
+    const box = $("fov-list");
+    if (!list.length) {
+      box.innerHTML = `<span style="color:var(--text-muted);">No active Forever/GTT orders</span>`;
+      return;
+    }
+    box.innerHTML = list.map(o => `
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--border);">
+        <div>
+          <b>${o.security_id}</b> [${o.order_flag}] - ${o.transaction_type} ${o.quantity} @ Trigger ₹${o.trigger_price}
+        </div>
+        <button class="table-btn table-btn-danger" onclick="cancelForever('${o.order_id}')">Cancel</button>
+      </div>
+    `).join("");
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+async function cancelForever(id) {
+  if (!confirm(`Cancel Forever order ${id}?`)) return;
+  try {
+    await fetch(`/api/dhan/forever/orders/${id}`, {method: "DELETE"});
+    loadForeverOrders();
+  } catch (e) { alert(e.message); }
+}
+
+async function handlePlaceSuper(e) {
+  e.preventDefault();
+  const payload = {
+    security_id: $("sup-sec").value.trim(),
+    exchange_segment: "NSE_EQ",
+    transaction_type: "BUY",
+    order_type: "LIMIT",
+    product_type: "BO",
+    quantity: parseInt($("sup-qty").value),
+    price: parseFloat($("sup-price").value),
+    target_price: parseFloat($("sup-target").value),
+    stop_loss_price: parseFloat($("sup-sl").value),
+    trailing_stop_loss: parseFloat($("sup-tsl").value || 0)
+  };
+  try {
+    const res = await fetch("/api/dhan/super/orders", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(payload)
+    });
+    const d = await res.json();
+    alert(`Super Order (Bracket) response: ${d.message || d.status}`);
+    loadSuperOrders();
+  } catch (err) {
+    alert("Super order failed: " + err.message);
+  }
+}
+
+async function loadSuperOrders() {
+  try {
+    const res = await fetch("/api/dhan/super/orders");
+    const d = await res.json();
+    const list = d.super_orders || [];
+    $("sup-count").textContent = list.length;
+    const box = $("sup-list");
+    if (!list.length) {
+      box.innerHTML = `<span style="color:var(--text-muted);">No active Super Orders</span>`;
+      return;
+    }
+    box.innerHTML = list.map(o => `
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--border);">
+        <div>
+          <b>${o.security_id}</b> Super Order #${o.order_id} - Qty ${o.quantity} @ ₹${o.price} | Target ₹${o.target_price} | SL ₹${o.stop_loss_price}
+        </div>
+        <button class="table-btn table-btn-danger" onclick="cancelSuperLeg('${o.order_id}', 'ENTRY_LEG')">Cancel Leg</button>
+      </div>
+    `).join("");
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+async function cancelSuperLeg(id, leg) {
+  if (!confirm(`Cancel Super Order leg ${leg} on ${id}?`)) return;
+  try {
+    await fetch(`/api/dhan/super/orders/${id}/${leg}`, {method: "DELETE"});
+    loadSuperOrders();
+  } catch (e) { alert(e.message); }
+}
+
+// ── Positions & Demat Holdings UI ──
+async function loadDhanPositions() {
+  try {
+    const res = await fetch("/api/dhan/positions");
+    const d = await res.json();
+    const list = d.positions || [];
+    $("dhan-pos-count").textContent = list.length;
+    const tb = $("dhan-pos-body");
+    if (!list.length) {
+      tb.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:20px;">No open positions today</td></tr>`;
+      return;
+    }
+    tb.innerHTML = list.map(p => `
+      <tr>
+        <td style="text-align:left;"><b>${p.underlying}</b> ${p.strike ? p.strike + p.opt_type : ''}</td>
+        <td>${p.exchange_segment}</td>
+        <td style="font-weight:700; color:${p.qty >= 0 ? 'var(--put)' : 'var(--call)'};">${p.qty}</td>
+        <td>₹${fmt(p.avg_price, 2)}</td>
+        <td>₹${fmt(p.ltp, 2)}</td>
+        <td style="font-weight:700; color:${p.pnl >= 0 ? 'var(--put)' : 'var(--call)'};">₹${fmt(p.pnl, 2)}</td>
+        <td>
+          <button class="table-btn" onclick="convertPosition('${p.security_id}', 'CNC')">Convert</button>
+        </td>
+      </tr>
+    `).join("");
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+async function convertPosition(secId, targetProd) {
+  try {
+    const res = await fetch("/api/dhan/positions/convert", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        security_id: secId,
+        from_product_type: "INTRADAY",
+        to_product_type: targetProd,
+        exchange_segment: "NSE_EQ",
+        convert_qty: 1
+      })
+    });
+    const d = await res.json();
+    alert("Conversion result: " + JSON.stringify(d));
+    loadDhanPositions();
+  } catch (e) { alert("Conversion failed: " + e.message); }
+}
+
+async function loadHoldings() {
+  try {
+    const res = await fetch("/api/dhan/holdings");
+    const d = await res.json();
+    const list = d.holdings || [];
+    $("dhan-hold-count").textContent = list.length;
+    $("dhan-hold-meta").textContent = `Invested: ₹${fmt(d.total_investment, 0)} | Value: ₹${fmt(d.total_current_val, 0)} | P&L: ₹${fmt(d.total_pnl, 0)} (${fmt(d.total_pnl_pct, 2)}%)`;
+    const tb = $("dhan-hold-body");
+    if (!list.length) {
+      tb.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:20px;">No demat stock holdings in this account</td></tr>`;
+      return;
+    }
+    tb.innerHTML = list.map(h => `
+      <tr>
+        <td style="text-align:left;"><b>${h.trading_symbol || h.security_id}</b> <div style="font-size:10px; color:var(--text-muted);">${h.isin}</div></td>
+        <td>${h.total_qty}</td>
+        <td>${h.available_qty}</td>
+        <td>₹${fmt(h.avg_cost_price, 2)}</td>
+        <td>₹${fmt(h.ltp, 2)}</td>
+        <td>₹${fmt(h.current_val, 2)}</td>
+        <td style="font-weight:700; color:${h.pnl >= 0 ? 'var(--put)' : 'var(--call)'};">₹${fmt(h.pnl, 2)} (${fmt(h.pnl_pct, 2)}%)</td>
+      </tr>
+    `).join("");
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+// ── US / Global Stocks UI ──
+async function loadGlobalStocks() {
+  try {
+    const res = await fetch("/api/dhan/global/holdings");
+    const d = await res.json();
+    $("global-total-val").textContent = "$" + fmt(d.total_value_usd, 2);
+    $("global-total-pnl").textContent = "$" + fmt(d.total_pnl_usd, 2);
+    $("global-acc-status").textContent = d.account_status || "ACTIVE";
+    $("global-status-line").textContent = d.message || "International holdings retrieved";
+
+    const list = d.holdings || [];
+    const tb = $("global-stocks-body");
+    if (!list.length) {
+      tb.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:20px;">${d.message || 'No US stock holdings active'}</td></tr>`;
+      return;
+    }
+    tb.innerHTML = list.map(g => `
+      <tr>
+        <td style="text-align:left;"><b>${g.symbol}</b> <div style="font-size:10px; color:var(--text-muted);">${g.company_name}</div></td>
+        <td>${g.quantity}</td>
+        <td>$${fmt(g.avg_price, 2)}</td>
+        <td>$${fmt(g.ltp, 2)}</td>
+        <td>$${fmt(g.total_value, 2)}</td>
+        <td style="font-weight:700; color:${g.unrealized_pnl >= 0 ? 'var(--put)' : 'var(--call)'};">$${fmt(g.unrealized_pnl, 2)} (${fmt(g.unrealized_pnl_pct, 2)}%)</td>
+      </tr>
+    `).join("");
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+// ── Trades & Ledger UI ──
+async function loadTrades() {
+  try {
+    const res = await fetch("/api/dhan/trades");
+    const d = await res.json();
+    const list = d.trades || [];
+    $("dhan-trd-count").textContent = list.length;
+    const tb = $("dhan-trades-body");
+    if (!list.length) {
+      tb.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:20px;">No executed trades recorded today</td></tr>`;
+      return;
+    }
+    tb.innerHTML = list.map(t => `
+      <tr>
+        <td style="text-align:left; font-family:var(--font-mono); font-size:11px;">${t.trade_id}</td>
+        <td>${t.exchange_time || t.create_time}</td>
+        <td><b>${t.trading_symbol || t.security_id}</b></td>
+        <td><span class="pill ${t.transaction_type === 'BUY' ? 'pill-put' : 'pill-call'}">${t.transaction_type}</span></td>
+        <td>${t.traded_quantity}</td>
+        <td>₹${fmt(t.traded_price, 2)}</td>
+      </tr>
+    `).join("");
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+async function loadLedger() {
+  const f = $("led-from").value || "2026-01-01";
+  const t = $("led-to").value || "2026-10-17";
+  try {
+    const res = await fetch(`/api/dhan/ledger?from_date=${f}&to_date=${t}`);
+    const d = await res.json();
+    $("led-deb").textContent = "₹" + fmt(d.total_debit, 2);
+    $("led-cred").textContent = "₹" + fmt(d.total_credit, 2);
+    $("led-bal").textContent = "₹" + fmt(d.closing_balance, 2);
+
+    const list = d.entries || [];
+    const tb = $("dhan-ledger-body");
+    if (!list.length) {
+      tb.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:20px;">No vouchers in selected date range</td></tr>`;
+      return;
+    }
+    tb.innerHTML = list.map(v => `
+      <tr>
+        <td style="text-align:left;">${v.voucher_date}</td>
+        <td style="text-align:left;">${v.narration || v.voucher_desc}</td>
+        <td>₹${fmt(v.voucher_amount, 2)}</td>
+        <td><span class="pill ${v.dr_cr === 'CR' ? 'pill-put' : 'pill-call'}">${v.dr_cr}</span></td>
+        <td style="font-weight:700;">₹${fmt(v.running_balance, 2)}</td>
+      </tr>
+    `).join("");
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+// ── EDIS UI ──
+async function triggerTpin() {
+  const f = $("edis-tpin-feedback");
+  f.textContent = "Requesting CDSL T-PIN generation...";
+  f.style.color = "var(--accent)";
+  try {
+    const res = await fetch("/api/dhan/edis/tpin", {method: "POST"});
+    const d = await res.json();
+    f.textContent = "✓ " + (d.message || "T-PIN generation triggered! Check SMS on registered mobile.");
+    f.style.color = "var(--put)";
+  } catch (e) {
+    f.textContent = "✕ Error: " + e.message;
+    f.style.color = "var(--call)";
+  }
+}
+
+async function generateEdisForm() {
+  const isin = $("edis-isin").value.trim();
+  const qty = parseInt($("edis-qty").value);
+  const out = $("edis-form-result");
+  out.textContent = "Generating CDSL form payload...";
+  try {
+    const res = await fetch("/api/dhan/edis/form", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({isin, qty, exchange: "NSE", segment: "EQ", bulk: false})
+    });
+    const d = await res.json();
+    out.innerHTML = `<span style="color:var(--put);">✓ Form Generated (Partner ID: ${d.edis_partner_id || 'OK'})</span>`;
+  } catch (e) {
+    out.textContent = "✕ Error: " + e.message;
+  }
+}
+
+async function checkEdisStatus() {
+  const isin = $("edis-isin").value.trim();
+  const out = $("edis-form-result");
+  out.textContent = `Checking status for ${isin}...`;
+  try {
+    const res = await fetch(`/api/dhan/edis/status/${isin}`);
+    const d = await res.json();
+    out.innerHTML = `<span style="color:var(--accent);">ISIN ${isin}: ${d.status} | Authorized Qty: ${d.authorized_qty}</span>`;
+  } catch (e) {
+    out.textContent = "✕ Error: " + e.message;
+  }
+}
+
+// ── Live Feed & Postback Stream UI ──
+async function loadLiveOrders() {
+  try {
+    const res = await fetch("/api/dhan/live/orders");
+    const d = await res.json();
+    const list = d.updates || [];
+    const box = $("live-order-stream");
+    if (!box) return;
+    if (!list.length) {
+      box.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:30px; font-size:12.5px;">No real-time events yet. WebSocket connected to wss://api-order-update.dhan.co.</div>`;
+      return;
+    }
+    box.innerHTML = list.map(u => `
+      <div style="background:var(--bg-page); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px; font-size:12px; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div style="font-weight:700; display:flex; align-items:center; gap:6px;">
+            <span class="badge-status badge-${(u.order_status || 'pending').toLowerCase()}">${u.order_status}</span>
+            <span>Order #${u.order_id || '-'}</span>
+            <span style="font-size:11px; color:var(--text-muted);">[${u.source}]</span>
+          </div>
+          <div style="font-size:11.5px; color:var(--text-secondary); margin-top:2px;">
+            ${u.transaction_type} ${u.quantity} ${u.trading_symbol || u.security_id} @ ₹${fmt(u.price, 2)}
+          </div>
+        </div>
+        <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">
+          ${u.update_time}
+        </div>
+      </div>
+    `).join("");
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+async function loadPostbacks() {
+  try {
+    const res = await fetch("/api/dhan/postback");
+    const d = await res.json();
+    alert(`Postback webhook info: ${d.postback_count} callbacks received. ${d.setup_guide}`);
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+// ── Margin Calculator UI ──
+async function calculateMargin() {
+  const payload = {
+    exchange_segment: $("mc-seg").value,
+    transaction_type: $("mc-side").value,
+    product_type: $("mc-prod").value,
+    security_id: $("mc-sec").value.trim(),
+    quantity: parseInt($("mc-qty").value),
+    price: parseFloat($("mc-price").value)
+  };
+  try {
+    const res = await fetch("/api/dhan/margin/calculate", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(payload)
+    });
+    const d = await res.json();
+    $("mc-res-tot").textContent = "₹" + fmt(d.total_margin, 2);
+    $("mc-res-span").textContent = "₹" + fmt(d.span_margin, 2);
+    $("mc-res-exp").textContent = "₹" + fmt(d.exposure_margin, 2);
+    $("mc-res-avail").textContent = "₹" + fmt(d.available_balance, 2);
+    $("mc-res-status").innerHTML = `<b style="color:var(--put);">Leverage: ${d.leverage || 'Standard'}</b> | Insufficient: ₹${fmt(d.insufficient_balance, 2)}`;
+  } catch (e) {
+    alert("Margin calculation failed: " + e.message);
+  }
+}
+
 
 // CHART SWITCHING
 function setChart(c) {
